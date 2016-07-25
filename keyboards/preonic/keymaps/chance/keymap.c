@@ -16,6 +16,18 @@
 #define _NUM 8
 #define _ADJUST 16
 
+// ### 1.3 Mousekey
+//- `KC_MS_U`, `KC_MS_D`, `KC_MS_L`, `KC_MS_R` for mouse cursor
+//- `KC_WH_U`, `KC_WH_D`, `KC_WH_L`, `KC_WH_R` for mouse wheel
+//- `KC_BTN1`, `KC_BTN2`, `KC_BTN3`, `KC_BTN4`, `KC_BTN5` for mouse buttons
+
+//### 1.4 System & Media key
+//- `KC_PWR`, `KC_SLEP`, `KC_WAKE` for Power, Sleep, Wake
+//- `KC_MUTE`, `KC_VOLU`, `KC_VOLD` for audio volume control
+//- `KC_MNXT`, `KC_MPRV`, `KC_MSTP`, `KC_MPLY`, `KC_MSEL` for media control
+//- `KC_MAIL`, `KC_CALC`, `KC_MYCM` for application launch
+//- `KC_WSCH`, `KC_WHOM`, `KC_WBAK`, `KC_WFWD`, `KC_WSTP`, `KC_WREF`, `KC_WFAV` for web browser operation
+
 enum preonic_keycodes {
   QWERTY = SAFE_RANGE,
   LOWER,
