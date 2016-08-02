@@ -82,9 +82,9 @@ If this is a bit complex for you, Docker might be the turn-key solution you need
 ```bash
 # You'll run this every time you want to build a keymap
 # modify the keymap and keyboard assigment to compile what you want
-# defaults are ergodox_ez/default
+# defaults are ergodox/default
 
-docker run -e keymap=gwen -e keyboard=ergodox_ez --rm -v $('pwd'):/qmk:rw edasque/qmk_firmware
+docker run -e keymap=gwen -e keyboard=ergodox --rm -v $('pwd'):/qmk:rw edasque/qmk_firmware
 
 ```
 
@@ -122,17 +122,16 @@ Below are some definitions that will be useful:
 
 Below is a list of the useful `make` commands in QMK:
 
-* `make` - cleans automatically and builds your keyboard and keymap depending on which folder you're in. This defaults to the "default" layout (unless in a keymap folder), and Planck keyboard in the root folder
+* `make` - builds your keyboard and keymap depending on which folder you're in. This defaults to the "default" layout (unless in a keymap folder), and Planck keyboard in the root folder
   * `make keyboard=<keyboard>` - specifies the keyboard (only to be used in root)
   * `make keymap=<keymap>` - specifies the keymap (only to be used in root and keyboard folder - not needed when in keymap folder)
-* `make quick` - skips the clean step (cannot be used immediately after modifying config.h or Makefiles)
+* `make clean` - cleans the `.build` folder, ensuring that everything is re-built
 * `make dfu` - (requires dfu-programmer) builds and flashes the keymap to your keyboard once placed in reset/dfu mode (button or press `KC_RESET`). This does not work for Teensy-based keyboards like the ErgoDox EZ.
   * `keyboard=` and `keymap=` are compatible with this
 * `make all-keyboards` - builds all keymaps for all keyboards and outputs status of each (use in root)
 * `make all-keyboards-default` - builds all default keymaps for all keyboards and outputs status of each (use in root)
 * `make all-keymaps [keyboard=<keyboard>]` - builds all of the keymaps for whatever keyboard folder you're in, or specified by `<keyboard>`
-* `make all-keyboards-quick`, `make all-keyboards-default-quick` and `make all-keymaps-quick [keyboard=<keyboard>]` - like the normal "make-all-*" commands, but they skip the clean steps
-
+* `make all-keyboards-*`, `make all-keyboards-default-*` and `make all-keymaps-* [keyboard=<keyboard>]` - like the normal "make-all-*" commands, but the last string aftter the `-` (for example clean) is passed to the keyboard make command.
 Other, less useful functionality:
 
 * `make COLOR=false` - turns off color output
@@ -229,9 +228,17 @@ For a value of `4` for this imaginary setting. So we `undef` it first, then `def
 
 You can then override any settings, rather than having to copy and paste the whole thing.
 
-## Going beyond the keycodes
+# Going beyond the keycodes
 
 Aside from the [basic keycodes](doc/keycode.txt), your keymap can include shortcuts to common operations.
+
+## Quick aliases to common actions
+
+Your keymap can include shortcuts to common operations (called "function actions" in tmk).
+
+These functions work the same way that their `ACTION_*` functions do - they're just quick aliases. To dig into all of the tmk `ACTION_*` functions, please see the [TMK documentation](https://github.com/jackhumbert/qmk_firmware/blob/master/doc/keymap.md#2-action).
+
+Instead of using `FNx` when defining `ACTION_*` functions, you can use `F(x)` - the benefit here is being able to use more than 32 function actions (up to 4096), if you happen to need them.
 
 ### Switching and toggling layers
 
@@ -310,7 +317,7 @@ We've added shortcuts to make common modifier/tap (mod-tap) mappings more compac
   * `LCAG_T(kc)` - is CtrlAltGui when held and *kc* when tapped
   * `MEH_T(kc)` - is like Hyper, but not as cool -- does not include the Cmd/Win key, so just sends Alt+Ctrl+Shift.
 
-### Space Cadet Shift: The future, built in
+## Space Cadet Shift: The future, built in
 
 Steve Losh [described](http://stevelosh.com/blog/2012/10/a-modern-space-cadet/) the Space Cadet Shift quite well. Essentially, you hit the left Shift on its own, and you get an opening parenthesis; hit the right Shift on its own, and you get the closing one. When hit with other keys, the Shift key keeps working as it always does. Yes, it's as cool as it sounds.
 
@@ -335,7 +342,7 @@ COMMAND_ENABLE   = no  # Commands for debug and configuration
 
 This is just to keep the keyboard from going into command mode when you hold both Shift keys at the same time.
 
-### The Leader key: A new kind of modifier
+## The Leader key: A new kind of modifier
 
 If you've ever used Vim, you know what a Leader key is. If not, you're about to discover a wonderful concept. :) Instead of hitting Alt+Shift+W for example (holding down three keys at the same time), what if you could hit a _sequence_ of keys instead? So you'd hit our special modifier (the Leader key), followed by W and then C (just a rapid succession of keys), and something would happen.
 
@@ -346,6 +353,8 @@ That's what `KC_LEAD` does. Here's an example:
 3. Within your `matrix_scan_user` function, do something like this:
 
 ```
+LEADER_EXTERNS();
+
 void matrix_scan_user(void) {
   LEADER_DICTIONARY() {
     leading = false;
@@ -371,9 +380,9 @@ void matrix_scan_user(void) {
 
 As you can see, you have three function. you can use - `SEQ_ONE_KEY` for single-key sequences (Leader followed by just one key), and `SEQ_TWO_KEYS` and `SEQ_THREE_KEYS` for longer sequences. Each of these accepts one or more keycodes as arguments. This is an important point: You can use keycodes from **any layer on your keyboard**. That layer would need to be active for the leader macro to fire, obviously.
 
-### Tap Dance: A single key can do 3, 5, or 100 different things
+## Tap Dance: A single key can do 3, 5, or 100 different things
 
-Hit the semicolon key once, send a semicolon. Hit it twice, rapidly -- send a colon. Hit it three times, and your keyboard's LEDs do a wild dance. That's just one example of what Tap Dance can do. It's one of the nicest community-contributed features in the firmware, conceived and created by [algernon](https://github.com/algernon) in [#451](https://github.com/jackhumbert/qmk_firmware/pull/451). Here's how Algernon describes the feature:
+Hit the semicolon key once, send a semicolon. Hit it twice, rapidly -- send a colon. Hit it three times, and your keyboard's LEDs do a wild dance. That's just one example of what Tap Dance can do. It's one of the nicest community-contributed features in the firmware, conceived and created by [algernon](https://github.com/algernon) in [#451](https://github.com/jackhumbert/qmk_firmware/pull/451). Here's how algernon describes the feature:
 
 With this feature one can specify keys that behave differently, based on the amount of times they have been tapped, and when interrupted, they get handled before the interrupter.
 
@@ -389,15 +398,13 @@ First, you will need `TAP_DANCE_ENABLE=yes` in your `Makefile`, because the feat
 
 This array specifies what actions shall be taken when a tap-dance key is in action. Currently, there are three possible options:
 
-* `ACTION_TAP_DANCE_DOUBLE(kc1, kc2)`: Sends the `kc1` keycode when tapped once, `kc2` otherwise.
+* `ACTION_TAP_DANCE_DOUBLE(kc1, kc2)`: Sends the `kc1` keycode when tapped once, `kc2` otherwise. When the key is held, the appropriate keycode is registered: `kc1` when pressed and held, `kc2` when tapped once, then pressed and held.
 * `ACTION_TAP_DANCE_FN(fn)`: Calls the specified function - defined in the user keymap - with the final tap count of the tap dance action.
 * `ACTION_TAP_DANCE_FN_ADVANCED(on_each_tap_fn, on_dance_finished_fn, on_reset_fn)`: Calls the first specified function - defined in the user keymap - on every tap, the second function on when the dance action finishes (like the previous option), and the last function when the tap dance action resets.
 
 The first option is enough for a lot of cases, that just want dual roles. For example, `ACTION_TAP_DANCE(KC_SPC, KC_ENT)` will result in `Space` being sent on single-tap, `Enter` otherwise.
 
 And that's the bulk of it!
-
-Do note, however, that this implementation does have some consequences: keys do not register until either they reach the tapping ceiling, or they time out. This means that if you hold the key, nothing happens, no repeat, no nothing. It is possible to detect held state, and register an action then too, but that's not implemented yet. Keys also unregister immediately after being registered, so you can't even hold the second tap. This is intentional, to be consistent.
 
 And now, on to the explanation of how it works!
 
@@ -409,7 +416,32 @@ Our next stop is `matrix_scan_tap_dance()`. This handles the timeout of tap-danc
 
 For the sake of flexibility, tap-dance actions can be either a pair of keycodes, or a user function. The latter allows one to handle higher tap counts, or do extra things, like blink the LEDs, fiddle with the backlighting, and so on. This is accomplished by using an union, and some clever macros.
 
-In the end, let's see a full example!
+### Examples
+
+Here's a simple example for a single definition: 
+
+1. In your `makefile`, add `TAP_DANCE_ENABLE = yes`
+2. In your `config.h` (which you can copy from `qmk_firmware/keyboards/planck/config.h` to your keymap directory), add `#define TAPPING_TERM 200`
+3. In your `keymap.c` file, define the variables and definitions, then add to your keymap: 
+
+```c
+//Tap Dance Declarations
+enum {
+  TD_ESC_CAPS = 0
+};
+
+//Tap Dance Definitions
+const qk_tap_dance_action_t tap_dance_actions[] = {
+  //Tap once for Esc, twice for Caps Lock
+  [TD_ESC_CAPS]  = ACTION_TAP_DANCE_DOUBLE(KC_ESC, KC_CAPS)
+// Other declarations would go here, separated by commas, if you have them
+};
+
+//In Layer declaration, add tap dance item in place of a key code
+TD(TD_ESC_CAPS) 
+```
+
+Here's a more complex example involving custom actions: 
 
 ```c
 enum {
@@ -421,20 +453,25 @@ enum {
 
 /* Have the above three on the keymap, TD(CT_SE), etc... */
 
-void dance_cln (qk_tap_dance_state_t *state) {
+void dance_cln_finished (qk_tap_dance_state_t *state, void *user_data) {
   if (state->count == 1) {
     register_code (KC_RSFT);
     register_code (KC_SCLN);
-    unregister_code (KC_SCLN);
-    unregister_code (KC_RSFT);
   } else {
     register_code (KC_SCLN);
-    unregister_code (KC_SCLN);
-    reset_tap_dance (state);
   }
 }
 
-void dance_egg (qk_tap_dance_state_t *state) {
+void dance_cln_reset (qk_tap_dance_state_t *state, void *user_data) {
+  if (state->count == 1) {
+    unregister_code (KC_RSFT);
+    unregister_code (KC_SCLN);
+  } else {
+    unregister_code (KC_SCLN);
+  }
+}
+
+void dance_egg (qk_tap_dance_state_t *state, void *user_data) {
   if (state->count >= 100) {
     SEND_STRING ("Safety dance!");
     reset_tap_dance (state);
@@ -443,7 +480,7 @@ void dance_egg (qk_tap_dance_state_t *state) {
 
 // on each tap, light up one led, from right to left
 // on the forth tap, turn them off from right to left
-void dance_flsh_each(qk_tap_dance_state_t *state) {
+void dance_flsh_each(qk_tap_dance_state_t *state, void *user_data) {
   switch (state->count) {
   case 1:
     ergodox_right_led_3_on();
@@ -464,7 +501,7 @@ void dance_flsh_each(qk_tap_dance_state_t *state) {
 }
 
 // on the fourth tap, set the keyboard on flash state
-void dance_flsh_finished(qk_tap_dance_state_t *state) {
+void dance_flsh_finished(qk_tap_dance_state_t *state, void *user_data) {
   if (state->count >= 4) {
     reset_keyboard();
     reset_tap_dance(state);
@@ -472,7 +509,7 @@ void dance_flsh_finished(qk_tap_dance_state_t *state) {
 }
 
 // if the flash state didnt happen, then turn off leds, left to right
-void dance_flsh_reset(qk_tap_dance_state_t *state) {
+void dance_flsh_reset(qk_tap_dance_state_t *state, void *user_data) {
   ergodox_right_led_1_off();
   _delay_ms(50);
   ergodox_right_led_2_off();
@@ -482,17 +519,17 @@ void dance_flsh_reset(qk_tap_dance_state_t *state) {
 
 const qk_tap_dance_action_t tap_dance_actions[] = {
   [CT_SE]  = ACTION_TAP_DANCE_DOUBLE (KC_SPC, KC_ENT)
- ,[CT_CLN] = ACTION_TAP_DANCE_FN (dance_cln)
+ ,[CT_CLN] = ACTION_TAP_DANCE_FN_ADVANCED (NULL, dance_cln_finished, dance_cln_reset)
  ,[CT_EGG] = ACTION_TAP_DANCE_FN (dance_egg)
  ,[CT_FLSH] = ACTION_TAP_DANCE_FN_ADVANCED (dance_flsh_each, dance_flsh_finished, dance_flsh_reset)
 };
 ```
 
-### Temporarily setting the default layer
+## Temporarily setting the default layer
 
 `DF(layer)` - sets default layer to *layer*. The default layer is the one at the "bottom" of the layer stack - the ultimate fallback layer. This currently does not persist over power loss. When you plug the keyboard back in, layer 0 will always be the default. It is theoretically possible to work around that, but that's not what `DF` does.
 
-### Prevent stuck modifiers
+## Prevent stuck modifiers
 
 Consider the following scenario:
 
@@ -512,12 +549,6 @@ If such situation bothers you add this to your `config.h`:
 This option uses 5 bytes of memory per every 8 keys on the keyboard
 rounded up (5 bits per key). For example on Planck (48 keys) it uses
 (48/8)\*5 = 30 bytes.
-
-### Remember: These are just aliases
-
-These functions work the same way that their `ACTION_*` functions do - they're just quick aliases. To dig into all of the tmk ACTION_* functions, please see the [TMK documentation](https://github.com/jackhumbert/qmk_firmware/blob/master/doc/keymap.md#2-action).
-
-Instead of using `FNx` when defining `ACTION_*` functions, you can use `F(x)` - the benefit here is being able to use more than 32 function actions (up to 4096), if you happen to need them.
 
 ## Macro shortcuts: Send a whole string when pressing just one key
 
@@ -705,7 +736,7 @@ Enable the backlight from the Makefile.
 
 All of these functions are available in the `*_kb()` or `*_user()` variety. `kb` ones should only be used in the `<keyboard>/<keyboard>.c` file, and `user` ones should only be used in the `keymap.c`. The keyboard ones call the user ones - it's necessary to keep these calls to allow the keymap functions to work correctly.
 
-## `void martix_init_*(void)`
+## `void matrix_init_*(void)`
 
 This function gets called when the matrix is initiated, and can contain start-up code for your keyboard/keymap.
 
@@ -800,6 +831,17 @@ PLAY_NOTE_ARRAY(tone_plover, false, 0); // Signature is: Song name, repeat, rest
 This is inside one of the macros. So when that macro executes, your keyboard plays that particular chime.
 
 "Rest style" in the method signature above (the last parameter) specifies if there's a rest (a moment of silence) between the notes.
+
+
+## Recording And Playing back Music
+* ```Music On``` - Turn music mode on. The default mapping is ```Lower+Upper+C```
+* ```LCTL``` - start a recording
+* play some tones
+* ```LALT``` - stop recording, stop playing
+* ```LGUI``` - play recording
+* ```LALT``` - stop playing
+* ```Music Off``` - Turn music mode off. The default mapping is ```Lower+Upper+V```
+
 
 ## MIDI functionalty
 
